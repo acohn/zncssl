@@ -1,0 +1,63 @@
+FROM ubuntu:18.04 AS build
+
+ARG ZNC_TAG=znc-1.7.1
+ARG PALAVER_TAG=1.1.2
+ARG TINI_TAG=v0.18.0
+
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    build-essential \
+    libboost-dev \
+    git \
+    libssl-dev \
+    cmake \
+    libicu-dev \
+    ca-certificates \
+  && git clone \
+    --branch ${ZNC_TAG} \
+    https://github.com/znc/znc /znc-src \
+  && cd /znc-src \
+  && git submodule update --init --recursive \
+  && mkdir build \
+  && cd build \
+  && cmake .. \
+  && make \
+  && make install \
+  && git clone https://github.com/Palaver/znc-palaver --branch ${PALAVER_TAG} --quiet /znc-palaver \
+  && cd /znc-palaver \
+  && make \
+  && cp palaver.so /usr/local/lib/znc/ \
+  && git clone https://github.com/krallin/tini --branch ${TINI_TAG} --quiet /tini \
+  && cd /tini \
+  && cmake . \
+  && make tini \
+  && mkdir /local_built \
+  && cd /local_built \
+  && mkdir bin lib share \
+  && cp /usr/local/bin/znc bin/ \
+  && cp /tini/tini bin/ \
+  && cp -r /usr/local/lib/znc lib/ \
+  && cp -r /usr/local/share/znc share/ 
+  
+FROM ubuntu:18.04
+
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    libssl1.1 \
+    libicu60 \
+    ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && useradd -ms /bin/bash znc \
+  && mkdir /znc-data \
+  && chown znc /znc-data
+
+COPY --from=build /local_built /usr/local
+
+# not needed if we aren't building modules
+#COPY --from=build /usr/local/bin/znc-buildmod /usr/local/bin/
+#COPY --from=build /usr/local/lib/pkgconfig/znc.pc /usr/local/lib/pkgconfig/
+#COPY --from=build /usr/local/include/znc /usr/local/include/znc
+
+VOLUME /znc-data
+
+USER znc
+
+ENTRYPOINT ["/usr/local/bin/tini", "--", "/usr/local/bin/znc", "-d", "/znc-data", "-f"]
