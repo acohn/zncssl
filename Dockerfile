@@ -3,6 +3,7 @@ FROM ubuntu:18.04 AS build
 ARG ZNC_TAG=znc-1.7.1
 ARG PALAVER_TAG=1.1.2
 ARG TINI_TAG=v0.18.0
+ARG SU_EXEC_TAG=v0.2
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     build-essential \
@@ -14,7 +15,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     ca-certificates \
   && git clone \
     --branch ${ZNC_TAG} \
+    -c advice.detachedHead=false \
     https://github.com/znc/znc /znc-src \
+  && git clone \
+  -c advice.detachedHead=false \
+  https://github.com/jpnurmi/znc-playback \
+  /znc-playback \
+  && cp /znc-playback/playback.cpp /znc-src/modules/
   && cd /znc-src \
   && git submodule update --init --recursive \
   && mkdir build \
@@ -22,19 +29,33 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   && cmake .. \
   && make \
   && make install \
-  && git clone https://github.com/Palaver/znc-palaver --branch ${PALAVER_TAG} --quiet /znc-palaver \
+  && git clone \
+  -c advice.detachedHead=false \
+  https://github.com/Palaver/znc-palaver \
+  --branch ${PALAVER_TAG} /znc-palaver \
   && cd /znc-palaver \
   && make \
   && cp palaver.so /usr/local/lib/znc/ \
-  && git clone https://github.com/krallin/tini --branch ${TINI_TAG} --quiet /tini \
+  && git clone -c advice.detachedHead=false \
+  https://github.com/krallin/tini \
+  --branch ${TINI_TAG} \
+  /tini \
   && cd /tini \
   && cmake . \
   && make tini \
+  && git clone \
+  -c advice.detachedHead=false \
+  https://github.com/ncopa/su-exec \
+  --branch ${SU_EXEC_TAG} \
+  /su-exec \
+  && cd /su-exec \
+  && make \
   && mkdir /local_built \
   && cd /local_built \
   && mkdir bin lib share \
   && cp /usr/local/bin/znc bin/ \
   && cp /tini/tini bin/ \
+  && cp /su-exec/su-exec bin/ \
   && cp -r /usr/local/lib/znc lib/ \
   && cp -r /usr/local/share/znc share/ 
   
@@ -45,7 +66,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libicu60 \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
-  && useradd -ms /bin/bash znc \
+  && useradd -Ms /bin/bash -u 1000 znc \
   && mkdir /znc-data \
   && chown znc /znc-data
 
@@ -58,6 +79,4 @@ COPY --from=build /local_built /usr/local
 
 VOLUME /znc-data
 
-USER znc
-
-ENTRYPOINT ["/usr/local/bin/tini", "--", "/usr/local/bin/znc", "-d", "/znc-data", "-f"]
+ENTRYPOINT ["/usr/local/bin/tini", "--", "/usr/local/bin/su-exec", "znc", "/usr/local/bin/znc", "-d", "/znc-data", "-f"]
