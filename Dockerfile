@@ -7,9 +7,12 @@ ARG SU_EXEC_TAG=v0.2
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     build-essential \
-    libboost-dev \
+    libboost-locale1.65-dev \
+    libgettextpo-dev \
+    gettext \
     git \
     libssl-dev \
+    libsasl2-dev \
     cmake \
     libicu-dev \
     ca-certificates \
@@ -21,7 +24,12 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   -c advice.detachedHead=false \
   https://github.com/jpnurmi/znc-playback \
   /znc-playback \
-  && cp /znc-playback/playback.cpp /znc-src/modules/
+  && cp /znc-playback/playback.cpp /znc-src/modules/ \
+  && git clone \
+  -c advice.detachedHead=false \
+  https://github.com/Palaver/znc-palaver \
+  --branch ${PALAVER_TAG} /znc-palaver \
+  && cp /znc-palaver/palaver.cpp /znc-src/modules/ \
   && cd /znc-src \
   && git submodule update --init --recursive \
   && mkdir build \
@@ -29,13 +37,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   && cmake .. \
   && make \
   && make install \
-  && git clone \
-  -c advice.detachedHead=false \
-  https://github.com/Palaver/znc-palaver \
-  --branch ${PALAVER_TAG} /znc-palaver \
-  && cd /znc-palaver \
-  && make \
-  && cp palaver.so /usr/local/lib/znc/ \
   && git clone -c advice.detachedHead=false \
   https://github.com/krallin/tini \
   --branch ${TINI_TAG} \
@@ -57,13 +58,16 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   && cp /tini/tini bin/ \
   && cp /su-exec/su-exec bin/ \
   && cp -r /usr/local/lib/znc lib/ \
-  && cp -r /usr/local/share/znc share/ 
+  && cp -r /usr/local/share/znc share/ \
+  && cp -r /usr/local/share/locale share/
   
 FROM ubuntu:18.04
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     libssl1.1 \
     libicu60 \
+    libsasl2-2 \
+    libboost-locale1.65.1 \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
   && useradd -Ms /bin/bash -u 1000 znc \
