@@ -1,6 +1,6 @@
 FROM ubuntu:18.04 AS build
 
-ARG ZNC_TAG=znc-1.7.1
+ARG ZNC_TAG=znc-1.7.3
 ARG PALAVER_TAG=1.1.2
 ARG TINI_TAG=v0.18.0
 ARG SU_EXEC_TAG=v0.2
@@ -20,6 +20,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     --branch ${ZNC_TAG} \
     -c advice.detachedHead=false \
     https://github.com/znc/znc /znc-src \
+  && git clone \
+  -c advice.detachedHead=false \
+  https://github.com/jreese/znc-push \
+  && cp /znc-push/push.cpp /znc-src/modules/ \
   && git clone \
   -c advice.detachedHead=false \
   https://github.com/jpnurmi/znc-playback \
