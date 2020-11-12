@@ -1,13 +1,13 @@
-FROM ubuntu:18.04 AS build
+FROM ubuntu:20.04 AS build
 
-ARG ZNC_TAG=znc-1.7.1
-ARG PALAVER_TAG=1.1.2
-ARG TINI_TAG=v0.18.0
+ARG ZNC_TAG=znc-1.8.2
+ARG PALAVER_TAG=1.2.1
+ARG TINI_TAG=v0.19.0
 ARG SU_EXEC_TAG=v0.2
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y \
     build-essential \
-    libboost-locale1.65-dev \
+    libboost-locale1.71-dev \
     libgettextpo-dev \
     gettext \
     git \
@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     cmake \
     libicu-dev \
     ca-certificates \
+    zlib1g-dev \
+    pkg-config \
   && git clone \
     --branch ${ZNC_TAG} \
     -c advice.detachedHead=false \
@@ -61,13 +63,14 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   && cp -r /usr/local/share/znc share/ \
   && cp -r /usr/local/share/locale share/
   
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y \
     libssl1.1 \
-    libicu60 \
+    libicu66 \
     libsasl2-2 \
-    libboost-locale1.65.1 \
+    libboost-locale1.71.0 \
+    zlib1g \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
   && useradd -Ms /bin/bash -u 1000 znc \
