@@ -1,0 +1,1 @@
+docker run --restart always -d -v znc-conf:/znc-data -v lego:/lego:ro --name znc -p 4095:4095 alexcohn/zncssl:1.7.1-ubuntu 
