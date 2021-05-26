@@ -29,7 +29,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-inst
   && cp /znc-playback/playback.cpp /znc-src/modules/ \
   && git clone \
   -c advice.detachedHead=false \
-  https://github.com/Palaver/znc-palaver \
+  https://github.com/cocodelabs/znc-palaver \
   --branch ${PALAVER_TAG} /znc-palaver \
   && cp /znc-palaver/palaver.cpp /znc-src/modules/ \
   && cd /znc-src \
