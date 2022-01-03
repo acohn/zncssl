@@ -1,0 +1,18 @@
+version: '3.7'
+services:
+        zncssl:
+                build: .
+                image: alexcohn/zncssl:v1.8.2
+                restart: always
+                network_mode: "host"
+                volumes:
+                        - type: volume
+                          source: lego
+                          target: /lego
+                          read_only: true
+                        - type: bind
+                          source: ./znc-data
+                          target: /znc-data
+volumes:
+        lego:
+                external: true
