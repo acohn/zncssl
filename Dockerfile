@@ -1,13 +1,13 @@
-FROM ubuntu:20.04 AS build
+FROM ubuntu:24.04 AS build
 
-ARG ZNC_TAG=znc-1.8.2
-ARG PALAVER_TAG=1.2.1
+ARG ZNC_TAG=znc-1.9.1
+ARG PALAVER_TAG=1.2.2
 ARG TINI_TAG=v0.19.0
 ARG SU_EXEC_TAG=v0.2
 
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y \
     build-essential \
-    libboost-locale1.71-dev \
+    libboost-locale1.83-dev \
     libgettextpo-dev \
     gettext \
     git \
@@ -63,19 +63,18 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-inst
   && cp -r /usr/local/share/znc share/ \
   && cp -r /usr/local/share/locale share/
   
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y \
-    libssl1.1 \
-    libicu66 \
+    libssl3t64 \
+    libicu74 \
     libsasl2-2 \
-    libboost-locale1.71.0 \
+    libboost-locale1.83.0 \
     zlib1g \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
-  && useradd -Ms /bin/bash -u 1000 znc \
   && mkdir /znc-data \
-  && chown znc /znc-data
+  && chown ubuntu /znc-data
 
 COPY --from=build /local_built /usr/local
 
@@ -86,4 +85,4 @@ COPY --from=build /local_built /usr/local
 
 VOLUME /znc-data
 
-ENTRYPOINT ["/usr/local/bin/tini", "--", "/usr/local/bin/su-exec", "znc", "/usr/local/bin/znc", "-d", "/znc-data", "-f"]
+ENTRYPOINT ["/usr/local/bin/tini", "--", "/usr/local/bin/su-exec", "ubuntu", "/usr/local/bin/znc", "-d", "/znc-data", "-f"]
