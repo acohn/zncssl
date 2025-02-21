@@ -2,7 +2,7 @@ version: '3.7'
 services:
         zncssl:
                 build: .
-                image: alexcohn/zncssl:v1.8.2
+                image: alexcohn/zncssl:v1.9.1
                 restart: always
                 network_mode: "host"
                 volumes:
